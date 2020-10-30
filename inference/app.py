@@ -1,7 +1,7 @@
 # https://tutorials.pytorch.kr/intermediate/flask_rest_api_tutorial.html
 import io
 from base64 import encodebytes
-from .utils import Model
+from utils import Model
 from flask import Flask, jsonify, request
 from time import time
 
@@ -10,7 +10,7 @@ config = {
     'output_nc': 3,
     'input_nc': 3,
     'size': (256, 256),
-    'model_path': './snapshot/last.pt'
+    'model_path': '/home/freefridays/github/espresso-cyclegan/snapshots/2020-10-29_09_23_35/51_9000.pt'
 }
 model = Model(config)
 

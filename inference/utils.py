@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 import torch
 from torchvision import transforms
-from .models import Generator
+from models import Generator
 
 
 class Model:
