@@ -1,7 +1,7 @@
 # https://tutorials.pytorch.kr/intermediate/flask_rest_api_tutorial.html
 import io
 from base64 import encodebytes
-from utils import Model
+from transfer import Model
 from flask import Flask, jsonify, request
 from time import time
 
