@@ -4,12 +4,15 @@ const multer_option = require('../modules/multer_option');
 const FormData = require('form-data');
 const fs = require('fs');
 const request = require('request');
+const log = require('../modules/util').log;
 // var multipart = require('connect-multiparty');
 // var mp_middleware = multipart();
 
 
 router.post('/', multer_option.single('img'), async (req, res) => {
     fileName = req.file['filename'];
+
+    log('transfer.js entry', fileName);
 
     const newFile = fs.createReadStream('./uploaded/' + fileName);
     const opt = {
@@ -25,19 +28,21 @@ router.post('/', multer_option.single('img'), async (req, res) => {
         body = JSON.parse(body);
         try {
             if (body['status']) {
+                log('transfer.js success', fileName);
                 res.json({
                     status: true,
                     elapsed_time: body['elapsed_time'],
                     img: body['img'],
                 });
             } else {
+                log('transfer.js reading body failed', fileName);
                 res.json({
                     success: false,
                     message: body['message']
                 });
             }
         } catch (e) {
-            console.log("[ERROR|axios_response] : ", e)
+            log(`transfer.js ERROR ${e}`, fileName);
         }
     });
 });
