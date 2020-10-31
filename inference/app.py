@@ -7,7 +7,7 @@ from time import time
 import magic
 
 app = Flask(__name__)
-app.run(port=5000, debug=True)
+# app.run(port=5000, debug=True)
 config = {
     'output_nc': 3,
     'input_nc': 3,

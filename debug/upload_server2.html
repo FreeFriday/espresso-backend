@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div>
+    <form id="image_form" method="POST">
+        Select image to upload:
+        <input type="file" name="img" id="img" accept="image/*" onchange="displayInput(event);">
+    </form>
+</div>
+
+<div>
+    <input type="button" value="Upload Image" id="submit">
+</div>
+
+<img src="" id="img_input" , style="width: 256px; height: 256px"/>
+<img src="" id="img_output" />
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+    function displayInput(event) {
+        var reader = new FileReader();
+        reader.onload = function(event) {
+            const img = document.getElementById("img_input");
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+    function uploadFile() {
+        var form = $('#image_form')[0];
+        var formData = new FormData(form);
+        // formData.append('img', $("#img")[0].files[0], 'a.jpg');  // $("#img")[0].files[0]
+
+        console.log($("#img")[0].files[0]);
+        console.log(formData);
+
+        $.ajax({
+            url: 'http://125.133.86.107:2020/transfer',
+            processData: false,
+            contentType: false,
+            data: formData,
+            type: 'POST',
+            success: function(result){
+                console.log(result);
+                document.getElementById('img_output').src = 'data:image/jpeg;base64,' + result.img
+            }
+        });
+    }
+
+    $('#submit').click(() => {
+        console.log('clicked')
+        uploadFile()
+    });
+
+</script>
+</body>
+</html>
