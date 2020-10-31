@@ -27,6 +27,9 @@ def inference():
     """
     - img: base64-encoded file
     """
+
+    print(request)
+    print(request.files)
     if request.method == 'POST' and request.files.get('img'):
         t0 = time()
 

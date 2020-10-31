@@ -1,7 +1,12 @@
 var express = require('express');
 var router = express.Router();
 
-router.get('/:id', function(req, res) {
+
+router.get('/demo', function(req, res) {
+   res.sendFile('../../debug/upload_server2.html');
+});
+
+router.get('/author/:id', function(req, res) {
     const id = req.params.id;
     res.send(`${id}`);
 });
