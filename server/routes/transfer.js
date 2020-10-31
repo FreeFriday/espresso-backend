@@ -24,7 +24,7 @@ router.post('/', multer_option.single('img'), async (req, res) => {
     };
     request(opt, (err, resp, body) => {
         // body: json string response
-        log('transfer.js', 'flask response: ' + resp.statusCode);
+        log('transfer.js', 'flask response: ' + toString(resp.statusCode));
         body = JSON.parse(body);
         try {
             if (body['status']) {
