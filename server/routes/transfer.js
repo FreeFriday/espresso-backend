@@ -12,7 +12,7 @@ const log = require('../modules/util').log;
 router.post('/', multer_option.single('img'), async (req, res) => {
     fileName = req.file['filename'];
 
-    log('transfer.js entry', fileName);
+    log('transfer.js', 'entry: ' + fileName);
 
     const newFile = fs.createReadStream('./uploaded/' + fileName);
     const opt = {
@@ -24,25 +24,25 @@ router.post('/', multer_option.single('img'), async (req, res) => {
     };
     request(opt, (err, resp, body) => {
         // body: json string response
-        console.log("[axios_response] : ", resp.statusCode);
+        log('transfer.js', 'flask response: ' + resp.statusCode);
         body = JSON.parse(body);
         try {
             if (body['status']) {
-                log('transfer.js success', fileName);
+                log('transfer.js', 'success:' + fileName);
                 res.json({
                     status: true,
                     elapsed_time: body['elapsed_time'],
                     img: body['img'],
                 });
             } else {
-                log('transfer.js reading body failed', fileName);
+                log('transfer.js', 'reading body failed: ' + fileName);
                 res.json({
                     success: false,
                     message: body['message']
                 });
             }
         } catch (e) {
-            log(`transfer.js ERROR ${e}`, fileName);
+            log('transfer.js',  `ERROR: ${e}`, fileName);
         }
     });
 });

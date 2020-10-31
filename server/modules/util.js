@@ -25,7 +25,7 @@ function getNow() {
 
 
 function log(name, msg) {
-    const msg_ = `[${getNow()} | ${name}] ${msg}`;
+    const msg_ = `[${getNow()}] (${name}) ${msg}`;
     console.log(msg_)
 }
 
