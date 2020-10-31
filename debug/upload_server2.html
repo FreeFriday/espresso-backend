@@ -13,12 +13,15 @@
     </form>
 </div>
 
-<div>
-    <input type="button" value="Upload Image" id="submit">
-</div>
 
-<img src="" id="img_input" , style="width: 256px; height: 256px"/>
-<img src="" id="img_output" />
+<br>
+<div class="image_box" align="center">
+    <img src="" id="img_input"  style="width: 256px; height: 256px"/>
+    <input type="button" value="transform!" id="submit" style="position: relative; bottom:120px">
+    <img src="" id="img_output" style="width: 256px; height: 256px;" />
+    <br>
+    <span id="time"></span>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script>
@@ -47,6 +50,7 @@
             success: function(result){
                 console.log(result);
                 document.getElementById('img_output').src = 'data:image/jpeg;base64,' + result.img
+                document.getElementById('time').textContent = result['elapsed_time'].toFixed(4) + 's'
             }
         });
     }
