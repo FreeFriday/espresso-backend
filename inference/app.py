@@ -1,11 +1,13 @@
 # https://tutorials.pytorch.kr/intermediate/flask_rest_api_tutorial.html
 import io
-from base64 import encodebytes
+import base64
 from transfer import Model
 from flask import Flask, jsonify, request
 from time import time
+import magic
 
 app = Flask(__name__)
+app.run(port=5000, debug=True)
 config = {
     'output_nc': 3,
     'input_nc': 3,
@@ -22,14 +24,26 @@ def hi():
 
 @app.route('/inference', methods=['POST'])
 def inference():
-    if request.method == 'POST':
+    """
+    - img: base64-encoded file
+    """
+    if request.method == 'POST' and request.files.get('img'):
         t0 = time()
 
         img_bytes = request.files['img'].read()
+        extention = magic.from_buffer(img_bytes).split()[0].upper()
+
+        if extention not in ['JPEG', 'PNG', 'JPG']:
+            res = {
+                'status': True,
+                'message': 'please request with valid image (only supports JPEG or PNG)'
+            }
+            return jsonify(res)
+
         output_img = model.inference(img_bytes)
         byte_arr = io.BytesIO()
         output_img.save(byte_arr, 'PNG')
-        encoded_img = encodebytes(byte_arr.getvalue()).decode('ascii')  # encode as base64
+        encoded_img = base64.encodebytes(byte_arr.getvalue()).decode('ascii')  # encode as base64
 
         t1 = time()
         res = {
@@ -40,7 +54,7 @@ def inference():
     else:
         res = {
             'status': False,
-            'message': 'please request using POST method'
+            'message': 'please request with image using POST method'
         }
 
     return jsonify(res)

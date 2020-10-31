@@ -6,11 +6,7 @@ from torchvision import transforms
 from models import Generator
 from utils import ReplayBuffer
 from utils import LambdaLR
-from utils import Logger
-from utils import save_image
 from utils import weights_init_normal
-from utils import read_image
-from datasets import ImageDataset
 
 
 class Model:
@@ -23,10 +19,10 @@ class Model:
         self.model.load_state_dict(state['netG_A2B'])
 
     def transform(self, sample):
-        transforms_sample_ = [ transforms.Resize(self.size, Image.BOX),
+        transforms_sample = [ transforms.Resize(self.size, Image.BOX),
                                transforms.ToTensor(),
                                transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)) ]
-        for transform in transforms_sample_:
+        for transform in transforms_sample:
             sample = transform(sample)
         sample = torch.unsqueeze(sample, 0)
 
@@ -37,7 +33,7 @@ class Model:
 
     def inference(self, img_bytes):
         _input = self.transform(Image.open(io.BytesIO(img_bytes)).convert('RGB')).cuda()
-        _output = self.model(_input).detach()
+        _output = self.model(_input).detach().squeeze().cpu()
         output_img = Image.fromarray(self.denormalize(_output))
 
         return output_img
