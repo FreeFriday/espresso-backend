@@ -60,20 +60,21 @@ def inference():
             img_bytes = img_bytes.getvalue()
 
             # remove background
-            # img_bytes_nobg = remove(img_bytes,
-            #                         alpha_matting=opt.get('am'),
-            #                         alpha_matting_foreground_threshold=opt.get('amft'),
-            #                         alpha_matting_background_threshold=opt.get('ambt'),
-            #                         alpha_matting_erode_structure_size=opt.get('amess'))
-            img_bytes_nobg = remove(img_bytes, alpha_matting=True)
+            img_bytes_nobg = remove(img_bytes,
+                                    alpha_matting=opt.get('am'),
+                                    alpha_matting_foreground_threshold=opt.get('amft'),
+                                    alpha_matting_background_threshold=opt.get('ambt'),
+                                    alpha_matting_erode_structure_size=opt.get('amess'))
+            # img_bytes_nobg = remove(img_bytes, alpha_matting=True)
 
             # get alpha channel
             img_nobg = np.array(Image.open(io.BytesIO(img_bytes_nobg)).convert('RGBA'))
             Image.fromarray(img_nobg).save('tmp.png')
             assert img_nobg.shape[-1] == 4  # must have alpha channel
             alpha = np.expand_dims(img_nobg[:, :, -1], axis=-1)
-            alpha[alpha < 20] = 0
-            alpha[alpha >= 20] = 255
+            if opt.get('am') == 'false':
+                alpha[alpha < 20] = 0
+                alpha[alpha >= 20] = 255
 
             output_img = model.inference(img_bytes)
             output_img = np.array(output_img)
