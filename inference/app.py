@@ -27,7 +27,11 @@ def pad_factor(img, factor=16):
     pad_H = (factor - (H % factor)) % factor
     padding = (pad_W // 2, pad_H // 2, pad_W - (pad_W // 2), pad_H - (pad_H // 2))
     img_pad = ImageOps.expand(img, padding)
-    return img_pad, W, H
+    return img_pad, pad_W, pad_H
+
+
+def original_region(img, pad_H, pad_W):
+    return img[pad_H // 2:-max((pad_H - (pad_H // 2)), 1), pad_W // 2:-max((pad_W - (pad_W // 2)), 1), :]
 
 
 @app.route('/hi', methods=['GET'])
@@ -59,14 +63,16 @@ def inference():
 
         # resize
         img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
-        img_pad, W, H = pad_factor(img, factor=16)
+        img_pad, pad_W, pad_H = pad_factor(img, factor=16)
         img_bytes = io.BytesIO()
         img_pad.save(img_bytes, 'PNG')
         img_bytes = img_bytes.getvalue()
 
         if opt.get('bgrmv') == 'false':
             output_img = model.inference(img_bytes)
-            output_img = Image.fromarray(np.array(output_img)).resize((W, H), Image.LANCZOS)
+            output_img = np.array(output_img)
+            output_img = original_region(output_img, pad_H, pad_W)
+            output_img = Image.fromarray(output_img)
             byte_arr = io.BytesIO()
             output_img.save(byte_arr, 'PNG')
         else:
@@ -86,7 +92,9 @@ def inference():
 
             output_img = model.inference(img_bytes)
             output_img = np.array(output_img)
-            output_img = Image.fromarray(np.concatenate([output_img, alpha], axis=-1)).resize((W, H), Image.LANCZOS)
+            output_img = np.concatenate([output_img, alpha], axis=-1)
+            output_img = original_region(output_img, pad_H, pad_W)
+            output_img = Image.fromarray(output_img)
             byte_arr = io.BytesIO()
             output_img.save(byte_arr, 'PNG')
 
