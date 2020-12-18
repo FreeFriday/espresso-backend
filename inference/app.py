@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 from time import time
 import magic
 from rembg.bg import remove
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 
 
@@ -19,6 +19,15 @@ config = {
     'model_path': '/home/freefridays/github/espresso-cyclegan/snapshots/2020-10-29_09_23_35/51_9000.pt'
 }
 model = Model(config)
+
+
+def pad_factor(img, factor=16):
+    W, H = img.size
+    pad_W = (factor - (W % factor)) % factor
+    pad_H = (factor - (H % factor)) % factor
+    padding = (pad_W // 2, pad_H // 2, pad_W - (pad_W // 2), pad_H - (pad_H // 2))
+    img_pad = ImageOps.expand(img, padding)
+    return img_pad, W, H
 
 
 @app.route('/hi', methods=['GET'])
@@ -48,43 +57,40 @@ def inference():
             }
             return jsonify(res)
 
+        # resize
+        img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
+        img_pad, W, H = pad_factor(img, factor=16)
+        img_bytes = io.BytesIO()
+        img_pad.save(img_bytes, 'PNG')
+        img_bytes = img_bytes.getvalue()
+
         if opt.get('bgrmv') == 'false':
             output_img = model.inference(img_bytes)
+            output_img = Image.fromarray(np.array(output_img)).resize((W, H), Image.LANCZOS)
             byte_arr = io.BytesIO()
             output_img.save(byte_arr, 'PNG')
         else:
-            # resize
-            img_resize = Image.open(io.BytesIO(img_bytes)).convert('RGBA').resize((256, 256), Image.LANCZOS)
-            img_bytes = io.BytesIO()
-            img_resize.save(img_bytes, 'PNG')
-            img_bytes = img_bytes.getvalue()
-
             # remove background
             img_bytes_nobg = remove(img_bytes,
-                                    alpha_matting=opt.get('am'),
-                                    alpha_matting_foreground_threshold=opt.get('amft'),
-                                    alpha_matting_background_threshold=opt.get('ambt'),
-                                    alpha_matting_erode_structure_size=opt.get('amess'))
-            # img_bytes_nobg = remove(img_bytes, alpha_matting=True)
-
+                                    alpha_matting=opt.get('am')=='True',
+                                    alpha_matting_foreground_threshold=eval(opt.get('amft')),
+                                    alpha_matting_background_threshold=eval(opt.get('ambt')),
+                                    alpha_matting_erode_structure_size=eval(opt.get('amess')))
             # get alpha channel
             img_nobg = np.array(Image.open(io.BytesIO(img_bytes_nobg)).convert('RGBA'))
             Image.fromarray(img_nobg).save('tmp.png')
             assert img_nobg.shape[-1] == 4  # must have alpha channel
             alpha = np.expand_dims(img_nobg[:, :, -1], axis=-1)
-            if opt.get('am') == 'false':
-                alpha[alpha < 20] = 0
-                alpha[alpha >= 20] = 255
+            # alpha[alpha < 20] = 0
+            # alpha[alpha >= 20] = 255
 
             output_img = model.inference(img_bytes)
             output_img = np.array(output_img)
-            output_img = Image.fromarray(np.concatenate([output_img, alpha], axis=-1))
+            output_img = Image.fromarray(np.concatenate([output_img, alpha], axis=-1)).resize((W, H), Image.LANCZOS)
             byte_arr = io.BytesIO()
             output_img.save(byte_arr, 'PNG')
 
         encoded_img = base64.encodebytes(byte_arr.getvalue()).decode('ascii')  # encode as base64
-
-        # encoded_img = base64.encodebytes(byte_arr.getvalue()).decode('ascii')  # encode as base64
 
         t1 = time()
         res = {

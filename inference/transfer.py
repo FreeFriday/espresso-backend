@@ -19,7 +19,7 @@ class Model:
         self.model.load_state_dict(state['netG_A2B'])
 
     def transform(self, sample):
-        transforms_sample = [  transforms.Resize(self.size, Image.BOX),
+        transforms_sample = [  # transforms.Resize(self.size, Image.BOX),
                                transforms.ToTensor(),
                                transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)) ]
         for transform in transforms_sample:
