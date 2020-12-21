@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inference Page</title>
+    <style>
+        .checkered{
+            height: 240px;
+            background: -webkit-linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(0, 0, 0, 0.0980392) 0), -webkit-linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(0, 0, 0, 0.0980392) 0), white;
+            background: -moz-linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(0, 0, 0, 0.0980392) 0), -moz-linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(0, 0, 0, 0.0980392) 0), white;
+            background: linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(0, 0, 0, 0.0980392) 0), linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(0, 0, 0, 0.0980392) 0), white;
+            background-repeat: repeat, repeat;
+            background-position: 0px 0, 5px 5px;
+            -webkit-transform-origin: 0 0 0;
+            transform-origin: 0 0 0;
+            -webkit-background-origin: padding-box, padding-box;
+            background-origin: padding-box, padding-box;
+            -webkit-background-clip: border-box, border-box;
+            background-clip: border-box, border-box;
+            -webkit-background-size: 10px 10px, 10px 10px;
+            background-size: 10px 10px, 10px 10px;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+            text-shadow: none;
+            -webkit-transition: none;
+            -moz-transition: none;
+            -o-transition: none;
+            transition: none;
+            -webkit-transform: scaleX(1) scaleY(1) scaleZ(1);
+            transform: scaleX(1) scaleY(1) scaleZ(1);
+        }
+    </style>
+</head>
+<body>
+
+<div>
+    <form id="image_form" method="POST">
+        Select image to upload:
+        <input type="file" name="img" id="img" accept="image/*" onchange="displayInput(event);">
+    </form>
+    <br>
+    <label><input type="checkbox" id="bgremove" value="bgrmv" checked onclick="toggleOptions(this, 'bgoptions');">Remove Background</label>
+    <br>
+    <div id="bgoptions">
+        <label><input type="checkbox" id="am" value="am" checked onclick="toggleOptions(this, 'amoptions');">Alpha Matting</label>
+        <br>
+        <div id="amoptions">
+            <label id="fgth_li"><input type="range" id="fg_th" value="240" min="0" max="253">Foreground Threshold: <label id="fgth_li_value">240</label></label>
+            <br>
+            <label id="bgth_li"><input type="range" id="bg_th" value="10" min="1" max="255">Background Threshold: <label id="bgth_li_value">10</label></label>
+            <br>
+            <label id="essth_li"><input type="range" id="ess_th" value="10" min="0" max="18">Erode Structure Size: <label id="essth_li_value">10</label></label>
+        </div>
+    </div>
+    
+</div>
+
+
+<br>
+<div class="image_box" align="center">
+    <img src="" class="checkered" id="img_input"  style="width: 512px; height: 512px; object-fit: contain" />
+    <input type="button" value=" Transform! " id="submit" style="position: relative; bottom:256px; margin: 10px">
+    <img src="" class="checkered" id="img_output" style="width: 512px; height: 512px; object-fit: contain" />
+    <br>
+    <span id="time"></span>
+</div>
+
+<br>
+<div id="pool" align="center">
+    Class: 
+    <select name="Class:" id="class-select">
+        <option value="">Select Object Class</option>
+    </select>
+      Name:
+    <input type="text" id="image-name">
+    <br>
+    <br>
+    <input type="button" value="Add to Object Pool" id="add">
+    <br>
+    <br>
+    <div id="status" align="center"></div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+    function toggleOptions(element, str){
+        const display = element.checked?"block":"none"
+        var target = document.getElementById(str)
+        target.style.display = display
+    }
+
+    /*
+    function showOptions(event){
+        var optionlist = []
+        optionlist.push(document.getElementById("fgth_li"))
+        optionlist.push(document.getElementById("bgth_li"))
+        optionlist.push(document.getElementById("essth_li"))
+
+        const bgremove = document.getElementById("bgremove")
+        if(bgremove.checked){
+            for(var e of optionlist){
+                e.style.visibility="visible"
+            }
+        }
+        else{
+            for(var e of optionlist){
+                e.style.visibility="hidden"
+            }
+        }
+    }
+    */
+
+    function ShowSliderValue(id, sVal)
+    {
+        var obValueView = document.getElementById(id);
+        obValueView.innerHTML = sVal
+    }
+
+    var RangeSlider = function(id, vid){
+        var range = $(id);
+        
+        range.on('input', function(){		
+            ShowSliderValue(vid, this.value);
+        });
+    };
+
+    RangeSlider("#fg_th", "fgth_li_value");
+    RangeSlider("#bg_th", "bgth_li_value");
+    RangeSlider("#ess_th", "essth_li_value");
+
+    function removeExt(str){
+        const indx = str.lastIndexOf(".")
+        return str.slice(0,(indx==-1)?str.length:indx);
+    }
+
+    function displayInput(event) {
+        var reader = new FileReader();
+        reader.onload = function(event) {
+            const img = document.getElementById("img_input");
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+        document.getElementById("image-name").value = removeExt(event.target.files[0].name)
+        document.getElementById('status').innerText = ""
+        uploaded_filename = ""
+        document.getElementById('img_output').src = "";
+    }
+
+    var uploaded_filename = ""
+
+    function uploadFile() {
+        var form = $('#image_form')[0];
+        var formData = new FormData(form);
+        // formData.append('img', $("#img")[0].files[0], 'a.jpg');  // $("#img")[0].files[0]
+
+        console.log($("#img")[0].files[0]);
+        console.log(formData);
+        document.getElementById('img_output').src = "";
+
+        var bgrmv = document.getElementById("bgremove").checked
+        var am = document.getElementById("am").checked
+        var amft = document.getElementById("fg_th").value
+        var ambt = document.getElementById("bg_th").value
+        var amess = document.getElementById("ess_th").value
+        
+        var status = document.getElementById('status')
+        status.innerText = ""
+        document.getElementById('time').textContent = 'Transforming...'
+
+        $.ajax({
+            url: 'http://125.133.86.107:8080/transfer?bgrmv='+(bgrmv?"true":"false")+"&am="+(am?"true":"false")
+            +"&amft="+amft+"&ambt="+ambt+"&amess="+amess,
+            processData: false,
+            contentType: false,
+            data: formData,
+            type: 'POST',
+            success: function(result){
+                console.log(result);
+                document.getElementById('img_output').src = 'data:image/jpeg;base64,' + result.img
+                document.getElementById('time').textContent = "Elapsed time: "+result['elapsed_time'].toFixed(4) + 's'
+                status.innerText = "Transform Success."
+                status.style.color = "black"
+                uploaded_filename = result['img_name']
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("ERR!");
+                console.log(errorThrown);
+
+                document.getElementById('time').textContent = 'Transform Failed.'
+                switch(jqXHR.status){
+                    case 500:
+                        status.innerText = "Internal server error."
+                        break;
+                }
+                status.style.color = "red"
+            }
+        });
+    }
+
+    $('#submit').click(() => {
+        console.log('clicked')
+        uploadFile()
+    });
+
+    // get object list and make dropdown option (e.g. chiken, cup, ...)
+    // setTo can be null if not needed
+    function getObjectList(setTo) {
+        // dropdown list
+        var list = document.getElementById('class-select');
+
+        // get option list from server
+        $.ajax({
+            url:'/obj/list',
+            type:'GET',
+            success:function(data){
+                list.textContent = '';
+                var obj = JSON.parse(data);
+
+                while(list.hasChildNodes()){
+                    list.removeChild(list.firstChild)
+                }
+
+                for (var [i, names] of obj.list.entries()) {
+                    var dropitem = document.createElement("option");
+                    dropitem.setAttribute('value', i)
+                    dropitem.innerText = names
+                    list.appendChild(dropitem);
+
+                    if(names == setTo) list.value = i;
+                }
+                
+                var dropitem = document.createElement("option");
+                dropitem.setAttribute('value', -1)
+                dropitem.innerText = "New class..."
+                list.appendChild(dropitem);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("ERR!");
+                console.log(errorThrown);
+
+            }
+        });
+    }
+
+    getObjectList()
+
+    $('#class-select').click(()=>{
+        console.log('selector clicked')
+        var list = document.getElementById('class-select');
+        console.log(list.value);
+
+        //create new class
+        if(list.value == -1){
+            var newclass = window.prompt("New class name:","")
+            if(newclass == null || newclass == ""){
+                list.value = list.firstChild.value
+            }
+            else{
+                //if already exists, 
+                for(var child of list.children){
+                    if(newclass == child.innerText){
+                        //set selector to that class
+                        list.value = child.value;
+                        break;
+                    }
+                }
+
+                //if not,
+                if(list.value == -1){
+                    //make a new class
+                    $.ajax({
+                        url:'/obj/addclass?name='+newclass,
+                        type:'POST',
+                        success:function(data){
+                            console.log("updating obj list")
+                            getObjectList(newclass);
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            console.log("ERR!");
+                            console.log(errorThrown);
+                            list.value = list.firstChild.value
+                        }
+                    })
+                }
+            }
+            
+        }
+    })
+
+    $('#add').click(() => {
+        var list = document.getElementById('class-select');
+        var classname = list.options[list.selectedIndex].text
+        var nameinput = document.getElementById('image-name')
+        var objname = nameinput.value
+        var status = document.getElementById('status')
+        if(!document.getElementById("img_input").src){
+            status.innerText = "Image not uploaded."
+            status.style.color = "red"
+            return;
+        }
+        /*
+        if(uploaded_filename == ""){
+            status.innerText = "Image not transformed."
+            status.style.color = "red"
+            return;
+        }
+        */
+        if(objname == ""){
+            status.innerText = "Enter object name."
+            status.style.color = "red"
+            return;
+        }
+
+        var form = $('#image_form')[0];
+        var formData = new FormData(form);
+        
+        $.ajax({
+            url:'/obj/addobj?class='+classname+"&name="+objname+"&temp="+uploaded_filename+"&raw="+
+            (uploaded_filename==""?"true":"false"),
+            processData: false,
+            contentType: false,
+            data: formData,
+            type:'POST',
+            success: function(data){ 
+                if(uploaded_filename == ""){
+                    status.innerText = "Uploaded image added to pool!"
+                }
+                else{
+                    status.innerText = "Object added to pool!"
+                }
+                
+                status.style.color = "black"
+                uploaded_filename = ""
+                nameinput.value = ""
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("ERR!");
+                console.log(errorThrown);
+                var status = document.getElementById('status')
+                switch(jqXHR.status){
+                    case 409:
+                        status.innerText = "Name already exists."
+                        break;
+                    case 500:
+                        status.innerText = "Internal server error."
+                        break;
+                }
+                status.style.color = "red"
+            }
+        })
+    })
+
+</script>
+</body>
+</html>
