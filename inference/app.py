@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 from time import time
 import magic
 from rembg.bg import remove
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
 from glob import glob
 from random import randint
@@ -18,7 +18,6 @@ app = Flask(__name__)
 config = {
     'output_nc': 3,
     'input_nc': 3,
-    'size': (256, 256),
     'model_path': '/home/freefridays/github/espresso-cyclegan/68_10405.pt'
         # '/home/freefridays/github/espresso-cyclegan/64_10405.pt' # openimage + no_resize_som
         # '/home/freefridays/github/espresso-cyclegan/59_10405.pt' # openimage + no_resize_som

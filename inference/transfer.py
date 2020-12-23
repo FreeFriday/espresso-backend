@@ -11,7 +11,6 @@ from utils import weights_init_normal
 
 class Model:
     def __init__(self, config):
-        self.size = config['size']
         self.input_nc = config['input_nc']
         self.output_nc = config['output_nc']
         self.model = Generator(self.input_nc, self.output_nc).cuda()
