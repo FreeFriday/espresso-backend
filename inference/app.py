@@ -19,7 +19,8 @@ config = {
     'output_nc': 3,
     'input_nc': 3,
     'size': (256, 256),
-    'model_path': '/home/freefridays/github/espresso-cyclegan/64_10405.pt' # openimage + no_resize_som
+    'model_path': '/home/freefridays/github/espresso-cyclegan/68_10405.pt'
+        # '/home/freefridays/github/espresso-cyclegan/64_10405.pt' # openimage + no_resize_som
         # '/home/freefridays/github/espresso-cyclegan/59_10405.pt' # openimage + no_resize_som
         #'/home/freefridays/github/espresso-cyclegan/55_10405.pt' # openimage
         #'/home/freefridays/github/espresso-cyclegan/snapshots/2020-10-29_09_23_35/51_9000.pt',
